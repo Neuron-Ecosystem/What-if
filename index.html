@@ -34,15 +34,21 @@
                 </div>
             </div>
 
-            <div class="controls">
-                <button class="btn-primary" id="newScenarioBtn">
-                    <span>Другой сценарий</span>
-                    <i class="fas fa-arrow-right"></i>
-                </button>
-                <div class="scenario-counter">
-                    <span id="currentScenario">1</span> из <span id="totalScenarios">3</span>
-                </div>
-            </div>
+<div class="controls">
+    <div class="nav-buttons">
+        <button class="btn-secondary" id="prevScenarioBtn" title="Предыдущий сценарий (←)">
+            <i class="fas fa-arrow-left"></i>
+            <span>Предыдущий</span>
+        </button>
+        <button class="btn-primary" id="nextScenarioBtn" title="Следующий сценарий (→ или Пробел)">
+            <span>Следующий</span>
+            <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+    <div class="scenario-counter">
+        <span id="currentScenario">1</span> из <span id="totalScenarios">52</span>
+    </div>
+</div>
         </main>
 
         <footer class="footer">
