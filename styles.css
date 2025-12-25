@@ -298,178 +298,13 @@ body {
 /* Управление */
 .controls {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: var(--spacing-lg);
     margin-top: auto;
     padding-top: var(--spacing-lg);
     border-top: 1px solid var(--border-color);
 }
 
-.btn-primary {
-    background: linear-gradient(90deg, var(--accent-color), var(--accent-light));
-    color: white;
-    border: none;
-    border-radius: var(--radius-md);
-    padding: var(--spacing-md) var(--spacing-xl);
-    font-size: var(--font-size-base);
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    transition: all var(--transition-fast);
-    box-shadow: 0 4px 12px rgba(138, 43, 226, 0.3);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(138, 43, 226, 0.4);
-}
-
-.btn-primary:active {
-    transform: translateY(0);
-}
-
-.scenario-counter {
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-
-/* Футер */
-.footer {
-    margin-top: var(--spacing-xl);
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--border-color);
-    text-align: center;
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-}
-
-.disclaimer {
-    font-size: var(--font-size-xs);
-    margin-top: var(--spacing-xs);
-    opacity: 0.7;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .container {
-        padding: var(--spacing-md);
-    }
-    
-    .scenario-card {
-        padding: var(--spacing-lg);
-    }
-    
-    .scenario-title {
-        font-size: var(--font-size-xl);
-    }
-    
-    .scenario-intro, .scenario-conclusion {
-        font-size: var(--font-size-base);
-    }
-    
-    .consequences-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .header {
-        flex-direction: column;
-        gap: var(--spacing-md);
-    }
-    
-    .controls {
-        flex-direction: column;
-        gap: var(--spacing-lg);
-        align-items: stretch;
-    }
-    
-    .btn-primary {
-        justify-content: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .logo h1 {
-        font-size: var(--font-size-2xl);
-    }
-    
-    .scenario-card {
-        padding: var(--spacing-md);
-    }
-    
-    .section-title {
-        font-size: var(--font-size-lg);
-    }
-}
-
-/* Утилиты для анимаций */
-.fade-in {
-    animation: fadeIn var(--transition-base);
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.delay-1 { animation-delay: 100ms; }
-.delay-2 { animation-delay: 200ms; }
-.delay-3 { animation-delay: 300ms; }
-.delay-4 { animation-delay: 400ms; }
-.delay-5 { animation-delay: 500ms; }
-
-/* Кредиты */
-.credit {
-    margin-top: var(--spacing-md);
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-    opacity: 0.8;
-    transition: opacity var(--transition-fast);
-}
-
-.credit:hover {
-    opacity: 1;
-}
-
-.neuron-link {
-    color: var(--accent-color);
-    text-decoration: none;
-    font-weight: 600;
-    position: relative;
-    padding: 2px 4px;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
-}
-
-.neuron-link:hover {
-    color: white;
-    background-color: var(--accent-color);
-    text-decoration: none;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(138, 43, 226, 0.3);
-}
-
-.neuron-link:active {
-    transform: translateY(0);
-}
-
-.neuron-link::after {
-    content: " ↗";
-    font-size: 0.8em;
-    opacity: 0.7;
-}
-
-/* Адаптивность для кредитов */
-@media (max-width: 768px) {
-    .credit {
-        font-size: var(--font-size-xs);
-        margin-top: var(--spacing-sm);
-    }
-}
-
-/* Навигационные кнопки */
 .nav-buttons {
     display: flex;
     gap: var(--spacing-md);
@@ -531,8 +366,120 @@ body {
     transform: translateY(0);
 }
 
-/* Адаптивность для кнопок */
+.scenario-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    width: 100%;
+}
+
+.scenario-counter {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-align: center;
+}
+
+.progress-container {
+    width: 100%;
+    height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-color), var(--accent-light));
+    border-radius: 2px;
+    transition: width var(--transition-base);
+    width: 0%;
+}
+
+/* Футер */
+.footer {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.disclaimer {
+    font-size: var(--font-size-xs);
+    margin-top: var(--spacing-xs);
+    opacity: 0.7;
+}
+
+/* Кредиты */
+.credit {
+    margin-top: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    opacity: 0.8;
+    transition: opacity var(--transition-fast);
+}
+
+.credit:hover {
+    opacity: 1;
+}
+
+.neuron-link {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: 600;
+    position: relative;
+    padding: 2px 4px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.neuron-link:hover {
+    color: white;
+    background-color: var(--accent-color);
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(138, 43, 226, 0.3);
+}
+
+.neuron-link:active {
+    transform: translateY(0);
+}
+
+.neuron-link::after {
+    content: " ↗";
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+/* Адаптивность */
 @media (max-width: 768px) {
+    .container {
+        padding: var(--spacing-md);
+    }
+    
+    .scenario-card {
+        padding: var(--spacing-lg);
+    }
+    
+    .scenario-title {
+        font-size: var(--font-size-xl);
+    }
+    
+    .scenario-intro, .scenario-conclusion {
+        font-size: var(--font-size-base);
+    }
+    
+    .consequences-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .header {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
     .nav-buttons {
         flex-direction: column;
         width: 100%;
@@ -543,9 +490,26 @@ body {
         justify-content: center;
         padding: var(--spacing-md);
     }
+    
+    .credit {
+        font-size: var(--font-size-xs);
+        margin-top: var(--spacing-sm);
+    }
 }
 
 @media (max-width: 480px) {
+    .logo h1 {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .scenario-card {
+        padding: var(--spacing-md);
+    }
+    
+    .section-title {
+        font-size: var(--font-size-lg);
+    }
+    
     .btn-primary span, .btn-secondary span {
         display: none;
     }
@@ -560,3 +524,19 @@ body {
         font-size: 1.2em;
     }
 }
+
+/* Утилиты для анимаций */
+.fade-in {
+    animation: fadeIn var(--transition-base);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.delay-1 { animation-delay: 100ms; }
+.delay-2 { animation-delay: 200ms; }
+.delay-3 { animation-delay: 300ms; }
+.delay-4 { animation-delay: 400ms; }
+.delay-5 { animation-delay: 500ms; }
