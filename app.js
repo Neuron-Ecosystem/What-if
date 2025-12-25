@@ -9,9 +9,7 @@ const CONFIG = {
 // Состояние приложения
 const AppState = {
     scenarios: [],
-    currentScenario: null,
-    viewedScenarios: [], // Массив ID в порядке просмотра
-    currentScenarioIndex: -1, // Индекс текущего сценария в viewedScenarios
+    currentScenarioIndex: 0, // Текущий индекс в массиве сценариев
     theme: CONFIG.defaultTheme
 };
 
@@ -22,8 +20,7 @@ const DOM = {
     nextScenarioBtn: document.getElementById('nextScenarioBtn'),
     themeToggle: document.getElementById('themeToggle'),
     currentScenarioEl: document.getElementById('currentScenario'),
-    totalScenariosEl: document.getElementById('totalScenarios'),
-    progressBar: document.getElementById('progressBar')
+    totalScenariosEl: document.getElementById('totalScenarios')
 };
 
 // Инициализация приложения
@@ -37,15 +34,8 @@ async function initApp() {
     // Инициализируем тему
     initTheme();
     
-    // Показываем сценарий
-    if (AppState.viewedScenarios.length > 0 && AppState.currentScenarioIndex >= 0) {
-        // Показываем последний просмотренный
-        const lastScenarioId = AppState.viewedScenarios[AppState.currentScenarioIndex];
-        showScenarioById(lastScenarioId);
-    } else {
-        // Иначе показываем случайный
-        showRandomScenario();
-    }
+    // Показываем текущий сценарий
+    showCurrentScenario();
     
     // Настраиваем обработчики событий
     setupEventListeners();
@@ -152,8 +142,7 @@ function loadAppState() {
         const saved = localStorage.getItem(CONFIG.appStateKey);
         if (saved) {
             const state = JSON.parse(saved);
-            AppState.viewedScenarios = state.viewedScenarios || [];
-            AppState.currentScenarioIndex = state.currentScenarioIndex || -1;
+            AppState.currentScenarioIndex = state.currentScenarioIndex || 0;
             AppState.theme = state.theme || CONFIG.defaultTheme;
         }
     } catch (error) {
@@ -165,7 +154,6 @@ function loadAppState() {
 function saveAppState() {
     try {
         const state = {
-            viewedScenarios: AppState.viewedScenarios,
             currentScenarioIndex: AppState.currentScenarioIndex,
             theme: AppState.theme
         };
@@ -175,28 +163,17 @@ function saveAppState() {
     }
 }
 
-// Обновление прогресса
-function updateProgress() {
-    const progress = ((AppState.currentScenarioIndex + 1) / AppState.scenarios.length) * 100;
-    if (DOM.progressBar) {
-        DOM.progressBar.style.width = `${progress}%`;
+// Показ текущего сценария
+function showCurrentScenario() {
+    if (AppState.scenarios.length === 0) {
+        showErrorMessage();
+        return;
     }
-}
-
-// Показ сценария по ID
-function showScenarioById(scenarioId) {
-    const scenario = AppState.scenarios.find(s => s.id === scenarioId);
+    
+    const scenario = AppState.scenarios[AppState.currentScenarioIndex];
     if (scenario) {
         showScenario(scenario);
-        AppState.currentScenario = scenario;
-        
-        // Находим индекс в истории
-        AppState.currentScenarioIndex = AppState.viewedScenarios.indexOf(scenarioId);
-        
-        // Обновляем UI
         updateUI();
-        
-        // Сохраняем состояние
         saveAppState();
     }
 }
@@ -209,14 +186,15 @@ function showNextScenario() {
         DOM.nextScenarioBtn.style.transform = '';
     }, 150);
     
-    // Если есть следующий сценарий в истории
-    if (AppState.currentScenarioIndex < AppState.viewedScenarios.length - 1) {
-        const nextId = AppState.viewedScenarios[AppState.currentScenarioIndex + 1];
-        showScenarioById(nextId);
-    } else {
-        // Иначе показываем новый случайный
-        showRandomScenario();
+    // Увеличиваем индекс на 1
+    AppState.currentScenarioIndex++;
+    
+    // Если достигли конца массива, переходим к началу
+    if (AppState.currentScenarioIndex >= AppState.scenarios.length) {
+        AppState.currentScenarioIndex = 0;
     }
+    
+    showCurrentScenario();
 }
 
 // Показ предыдущего сценария
@@ -227,54 +205,19 @@ function showPreviousScenario() {
         DOM.prevScenarioBtn.style.transform = '';
     }, 150);
     
-    if (AppState.currentScenarioIndex > 0) {
-        const prevId = AppState.viewedScenarios[AppState.currentScenarioIndex - 1];
-        showScenarioById(prevId);
-    }
-}
-
-// Показ случайного сценария
-function showRandomScenario() {
-    if (AppState.scenarios.length === 0) {
-        showErrorMessage();
-        return;
+    // Уменьшаем индекс на 1
+    AppState.currentScenarioIndex--;
+    
+    // Если индекс стал меньше 0, переходим к последнему сценарию
+    if (AppState.currentScenarioIndex < 0) {
+        AppState.currentScenarioIndex = AppState.scenarios.length - 1;
     }
     
-    // Фильтруем непросмотренные сценарии
-    const availableScenarios = AppState.scenarios.filter(
-        scenario => !AppState.viewedScenarios.includes(scenario.id)
-    );
-    
-    // Если все просмотрены, сбрасываем историю
-    if (availableScenarios.length === 0) {
-        AppState.viewedScenarios = [];
-        AppState.currentScenarioIndex = -1;
-        showRandomScenario();
-        return;
-    }
-    
-    // Выбираем случайный сценарий
-    const randomIndex = Math.floor(Math.random() * availableScenarios.length);
-    const selectedScenario = availableScenarios[randomIndex];
-    
-    // Добавляем в историю
-    AppState.viewedScenarios.push(selectedScenario.id);
-    AppState.currentScenarioIndex = AppState.viewedScenarios.length - 1;
-    
-    // Показываем сценарий
-    showScenario(selectedScenario);
-    
-    // Обновляем UI
-    updateUI();
-    
-    // Сохраняем состояние
-    saveAppState();
+    showCurrentScenario();
 }
 
 // Отображение сценария
 function showScenario(scenario) {
-    AppState.currentScenario = scenario;
-    
     // Создаем HTML для сценария
     const scenarioHTML = `
         <h2 class="scenario-title fade-in">${scenario.title}</h2>
@@ -327,17 +270,9 @@ function showScenario(scenario) {
 
 // Обновление UI
 function updateUI() {
-    // Обновляем счетчик
+    // Обновляем счетчик (индекс + 1, так как индексация с 0)
     DOM.currentScenarioEl.textContent = AppState.currentScenarioIndex + 1;
     DOM.totalScenariosEl.textContent = AppState.scenarios.length;
-    
-    // Обновляем прогресс
-    updateProgress();
-    
-    // Обновляем состояние кнопок
-    DOM.prevScenarioBtn.disabled = AppState.currentScenarioIndex <= 0;
-    DOM.prevScenarioBtn.style.opacity = AppState.currentScenarioIndex <= 0 ? '0.5' : '1';
-    DOM.prevScenarioBtn.style.cursor = AppState.currentScenarioIndex <= 0 ? 'not-allowed' : 'pointer';
 }
 
 // Показ сообщения об ошибке
@@ -356,7 +291,6 @@ function showErrorMessage() {
 
 // Инициализация темы
 function initTheme() {
-    // Проверяем сохраненную тему (уже загружена в loadAppState)
     // Устанавливаем тему
     setTheme(AppState.theme);
     
