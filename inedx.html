@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What If — альтернативные версии реальности</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <h1>What If</h1>
+                <p class="tagline">Альтернативные версии реальности</p>
+            </div>
+            <div class="theme-toggle">
+                <button id="themeToggle" aria-label="Переключить тему">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="scenario-container">
+            <div class="scenario-card" id="scenarioCard">
+                <!-- Сценарий будет загружен сюда через JavaScript -->
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Загружаем альтернативную реальность...</p>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn-primary" id="newScenarioBtn">
+                    <span>Другой сценарий</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <div class="scenario-counter">
+                    <span id="currentScenario">1</span> из <span id="totalScenarios">3</span>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>What If — интеллектуальный симулятор альтернативных миров</p>
+            <p class="disclaimer">Все сценарии являются художественным вымыслом и созданы для размышлений</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
