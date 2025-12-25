@@ -419,3 +419,52 @@ body {
 .delay-3 { animation-delay: 300ms; }
 .delay-4 { animation-delay: 400ms; }
 .delay-5 { animation-delay: 500ms; }
+
+/* Кредиты */
+.credit {
+    margin-top: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    opacity: 0.8;
+    transition: opacity var(--transition-fast);
+}
+
+.credit:hover {
+    opacity: 1;
+}
+
+.neuron-link {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: 600;
+    position: relative;
+    padding: 2px 4px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.neuron-link:hover {
+    color: white;
+    background-color: var(--accent-color);
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(138, 43, 226, 0.3);
+}
+
+.neuron-link:active {
+    transform: translateY(0);
+}
+
+.neuron-link::after {
+    content: " ↗";
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+/* Адаптивность для кредитов */
+@media (max-width: 768px) {
+    .credit {
+        font-size: var(--font-size-xs);
+        margin-top: var(--spacing-sm);
+    }
+}
