@@ -6,12 +6,202 @@ const CONFIG = {
     viewedScenariosKey: 'whatIf_viewedScenarios'
 };
 
-// Состояние приложения
+// Обновляем AppState для хранения истории
 const AppState = {
     scenarios: [],
     currentScenario: null,
-    viewedScenarios: new Set(),
+    viewedScenarios: [], // Теперь это массив ID в порядке просмотра
+    currentScenarioIndex: -1, // Индекс текущего сценария в viewedScenarios
     theme: CONFIG.defaultTheme
+};
+
+// Функция показа сценария по ID
+function showScenarioById(scenarioId) {
+    const scenario = AppState.scenarios.find(s => s.id === scenarioId);
+    if (scenario) {
+        showScenario(scenario);
+        AppState.currentScenario = scenario;
+        
+        // Находим индекс в истории
+        AppState.currentScenarioIndex = AppState.viewedScenarios.indexOf(scenarioId);
+        
+        // Обновляем счетчик
+        DOM.currentScenarioEl.textContent = AppState.currentScenarioIndex + 1;
+        
+        // Сохраняем состояние
+        saveAppState();
+    }
+}
+
+// Показ следующего сценария
+function showNextScenario() {
+    // Если есть следующий сценарий в истории
+    if (AppState.currentScenarioIndex < AppState.viewedScenarios.length - 1) {
+        const nextId = AppState.viewedScenarios[AppState.currentScenarioIndex + 1];
+        showScenarioById(nextId);
+    } else {
+        // Иначе показываем новый случайный
+        showRandomScenario();
+    }
+}
+
+// Показ предыдущего сценария
+function showPreviousScenario() {
+    if (AppState.currentScenarioIndex > 0) {
+        const prevId = AppState.viewedScenarios[AppState.currentScenarioIndex - 1];
+        showScenarioById(prevId);
+    }
+}
+
+// Обновленная функция показа случайного сценария
+function showRandomScenario() {
+    if (AppState.scenarios.length === 0) {
+        showErrorMessage();
+        return;
+    }
+    
+    // Фильтруем непросмотренные сценарии
+    const availableScenarios = AppState.scenarios.filter(
+        scenario => !AppState.viewedScenarios.includes(scenario.id)
+    );
+    
+    // Если все просмотрены, сбрасываем историю
+    if (availableScenarios.length === 0) {
+        AppState.viewedScenarios = [];
+        showRandomScenario();
+        return;
+    }
+    
+    // Выбираем случайный сценарий
+    const randomIndex = Math.floor(Math.random() * availableScenarios.length);
+    const selectedScenario = availableScenarios[randomIndex];
+    
+    // Добавляем в историю
+    AppState.viewedScenarios.push(selectedScenario.id);
+    AppState.currentScenarioIndex = AppState.viewedScenarios.length - 1;
+    
+    // Показываем сценарий
+    showScenario(selectedScenario);
+    
+    // Обновляем счетчик
+    DOM.currentScenarioEl.textContent = AppState.viewedScenarios.length;
+    DOM.totalScenariosEl.textContent = AppState.scenarios.length;
+    
+    // Сохраняем состояние
+    saveAppState();
+}
+
+// Сохранение состояния приложения
+function saveAppState() {
+    try {
+        const state = {
+            viewedScenarios: AppState.viewedScenarios,
+            currentScenarioIndex: AppState.currentScenarioIndex,
+            theme: AppState.theme
+        };
+        localStorage.setItem('whatIf_appState', JSON.stringify(state));
+    } catch (error) {
+        console.error('Ошибка сохранения состояния:', error);
+    }
+}
+
+// Загрузка состояния приложения
+function loadAppState() {
+    try {
+        const saved = localStorage.getItem('whatIf_appState');
+        if (saved) {
+            const state = JSON.parse(saved);
+            AppState.viewedScenarios = state.viewedScenarios || [];
+            AppState.currentScenarioIndex = state.currentScenarioIndex || -1;
+            AppState.theme = state.theme || CONFIG.defaultTheme;
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки состояния:', error);
+    }
+}
+
+// Обновляем функцию инициализации
+async function initApp() {
+    await loadScenarios();
+    loadAppState(); // Загружаем состояние вместо отдельной функции
+    initTheme();
+    
+    // Если есть история, показываем последний просмотренный
+    if (AppState.viewedScenarios.length > 0 && AppState.currentScenarioIndex >= 0) {
+        const lastScenarioId = AppState.viewedScenarios[AppState.currentScenarioIndex];
+        showScenarioById(lastScenarioId);
+    } else {
+        // Иначе показываем случайный
+        showRandomScenario();
+    }
+    
+    setupEventListeners();
+}
+
+// Обновляем обработчики событий
+function setupEventListeners() {
+    // Кнопка "Следующий сценарий"
+    DOM.nextScenarioBtn.addEventListener('click', () => {
+        DOM.nextScenarioBtn.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            DOM.nextScenarioBtn.style.transform = '';
+        }, 150);
+        showNextScenario();
+    });
+    
+    // Кнопка "Предыдущий сценарий"
+    DOM.prevScenarioBtn.addEventListener('click', () => {
+        DOM.prevScenarioBtn.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            DOM.prevScenarioBtn.style.transform = '';
+        }, 150);
+        showPreviousScenario();
+    });
+    
+    // Кнопка переключения темы
+    DOM.themeToggle.addEventListener('click', toggleTheme);
+    
+    // Обработка клавиатуры
+    document.addEventListener('keydown', (e) => {
+        // Стрелка вправо или пробел для следующего сценария
+        if (e.code === 'ArrowRight' || e.code === 'Space') {
+            e.preventDefault();
+            showNextScenario();
+        }
+        
+        // Стрелка влево для предыдущего сценария
+        if (e.code === 'ArrowLeft') {
+            e.preventDefault();
+            showPreviousScenario();
+        }
+        
+        // T для переключения темы
+        if (e.code === 'KeyT' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            toggleTheme();
+        }
+    });
+    
+    // Предотвращаем прокрутку страницы при нажатии пробела
+    document.addEventListener('keyup', (e) => {
+        if (e.code === 'Space' && e.target === document.body) {
+            e.preventDefault();
+        }
+    });
+}
+
+// Обновляем DOM элементы
+const DOM = {
+    scenarioCard: document.getElementById('scenarioCard'),
+    prevScenarioBtn: document.getElementById('prevScenarioBtn'),
+    nextScenarioBtn: document.getElementById('nextScenarioBtn'),
+    themeToggle: document.getElementById('themeToggle'),
+    currentScenarioEl: document.getElementById('currentScenario'),
+    totalScenariosEl: document.getElementById('totalScenarios')
+};
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', initApp);
 };
 
 // DOM элементы
