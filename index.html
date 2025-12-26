@@ -3,62 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>What If — альтернативные версии реальности</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>What If — Лаборатория альтернативной реальности</title>
+    <meta name="description" content="Интеллектуальный симулятор альтернативных миров. Что было бы, если...?">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌌</text></svg>">
 </head>
 <body>
+    <div class="app-background"></div>
+    
     <div class="container">
         <header class="header">
-            <div class="logo">
-                <h1>What If</h1>
-                <p class="tagline">Альтернативные версии реальности</p>
+            <div class="logo-container">
+                <div class="logo">What If</div>
+                <div class="tagline">Симулятор реальностей</div>
             </div>
-            <div class="theme-toggle">
-                <button id="themeToggle" aria-label="Переключить тему">
+            
+            <div class="header-controls">
+                <button id="dailyScenarioBtn" class="icon-btn" title="Сценарий дня">
+                    <i class="fas fa-star"></i>
+                </button>
+                <button id="themeToggle" class="icon-btn" title="Тема">
                     <i class="fas fa-moon"></i>
                 </button>
             </div>
         </header>
 
+        <nav class="categories-nav">
+            <button class="category-pill active" data-category="all">Все</button>
+            <button class="category-pill" data-category="tech">Технологии</button>
+            <button class="category-pill" data-category="society">Общество</button>
+            <button class="category-pill" data-category="nature">Природа</button>
+            <button class="category-pill" data-category="human">Человек</button>
+        </nav>
+
         <main class="scenario-container">
             <div class="scenario-card" id="scenarioCard">
-                <!-- Сценарий будет загружен сюда через JavaScript -->
                 <div class="loading-state">
-                    <div class="loading-spinner"></div>
-                    <p>Загружаем альтернативную реальность...</p>
+                    <div class="loading-pulse"></div>
+                    <p>Генерация реальности...</p>
                 </div>
             </div>
 
-            <div class="controls">
-                <div class="nav-buttons">
-                    <button class="btn-secondary" id="prevScenarioBtn" title="Предыдущий сценарий (←)">
-                        <i class="fas fa-arrow-left"></i>
-                        <span>Предыдущий</span>
-                    </button>
-                    <button class="btn-primary" id="nextScenarioBtn" title="Следующий сценарий (→ или Пробел)">
-                        <span>Следующий</span>
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
+            <div class="controls-wrapper">
+                <div class="meta-info">
+                    <span id="scenarioCategory" class="meta-tag">Загрузка...</span>
+                    <span id="readingTime" class="meta-tag"><i class="far fa-clock"></i> ~40 сек</span>
                 </div>
-                <div class="scenario-counter">
-                    <span id="currentScenario">1</span> из <span id="totalScenarios">52</span>
+
+                <div class="nav-buttons">
+                    <button class="btn-secondary" id="prevScenarioBtn">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    
+                    <button class="btn-share" id="shareBtn">
+                        <i class="fas fa-share-alt"></i>
+                        <span>Поделиться миром</span>
+                    </button>
+
+                    <button class="btn-primary" id="nextScenarioBtn">
+                        <span>Дальше</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
             </div>
         </main>
 
         <footer class="footer">
-            <p>What If — интеллектуальный симулятор альтернативных миров</p>
-            <p class="disclaimer">Все сценарии являются художественным вымыслом и созданы для размышлений</p>
-            <p class="credit">
-                Сделано <a href="https://neuron-p2p.ru" target="_blank" rel="noopener noreferrer" class="neuron-link">Neuron Ecosystem</a>
-            </p>
+            <div class="footer-links">
+                <a href="https://t.me/neuron_p2p" target="_blank" class="footer-link">Предложить сценарий</a>
+                <span class="separator">•</span>
+                <a href="https://neuron-p2p.ru" id="subscribeBtn" class="footer-link">Подписаться</a>
+            </div>
+            <p class="credit">Neuron Ecosystem © 2025</p>
         </footer>
     </div>
+
+    <div id="toast" class="toast">Ссылка скопирована</div>
 
     <script src="app.js"></script>
 </body>
