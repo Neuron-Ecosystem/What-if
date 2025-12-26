@@ -1,366 +1,354 @@
-// Конфигурация приложения
+// CONFIGURATION
 const CONFIG = {
     scenariosFile: 'scenarios.json',
     defaultTheme: 'dark',
-    animationDelay: 50,
-    appStateKey: 'whatIf_appState'
+    appStateKey: 'whatIf_v2_state',
+    dayMs: 86400000 // 24 hours in ms
 };
 
-// Состояние приложения
+// GLOBAL STATE
 const AppState = {
     scenarios: [],
-    currentScenarioIndex: 0, // Текущий индекс в массиве сценариев
-    theme: CONFIG.defaultTheme
+    filteredScenarios: [], // For categories
+    currentIndex: 0,
+    currentCategory: 'all',
+    theme: CONFIG.defaultTheme,
+    dailyScenarioId: null
 };
 
-// DOM элементы
+// DOM ELEMENTS
 const DOM = {
-    scenarioCard: document.getElementById('scenarioCard'),
-    prevScenarioBtn: document.getElementById('prevScenarioBtn'),
-    nextScenarioBtn: document.getElementById('nextScenarioBtn'),
+    card: document.getElementById('scenarioCard'),
+    prevBtn: document.getElementById('prevScenarioBtn'),
+    nextBtn: document.getElementById('nextScenarioBtn'),
+    shareBtn: document.getElementById('shareBtn'),
+    dailyBtn: document.getElementById('dailyScenarioBtn'),
     themeToggle: document.getElementById('themeToggle'),
-    currentScenarioEl: document.getElementById('currentScenario'),
-    totalScenariosEl: document.getElementById('totalScenarios')
+    categoryPills: document.querySelectorAll('.category-pill'),
+    metaCategory: document.getElementById('scenarioCategory'),
+    metaTime: document.getElementById('readingTime'),
+    toast: document.getElementById('toast')
 };
 
-// Инициализация приложения
+// --- INITIALIZATION ---
+
 async function initApp() {
-    // Загружаем сценарии
-    await loadScenarios();
-    
-    // Загружаем состояние
-    loadAppState();
-    
-    // Инициализируем тему
-    initTheme();
-    
-    // Показываем текущий сценарий
-    showCurrentScenario();
-    
-    // Настраиваем обработчики событий
+    loadTheme();
     setupEventListeners();
     
-    console.log('What If MVP инициализирован');
+    try {
+        await loadScenarios();
+        calculateDailyScenario();
+        handleRouting(); // Check URL hash
+    } catch (error) {
+        console.error("Critical Init Error:", error);
+        showErrorState();
+    }
 }
 
-// Загрузка сценариев из JSON
+// --- DATA LOGIC ---
+
 async function loadScenarios() {
     try {
         const response = await fetch(CONFIG.scenariosFile);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error('Failed to load scenarios');
+        
         AppState.scenarios = await response.json();
-        DOM.totalScenariosEl.textContent = AppState.scenarios.length;
-        console.log(`Загружено ${AppState.scenarios.length} сценариев`);
+        
+        // Initial filter (all)
+        filterScenarios('all');
+        
     } catch (error) {
-        console.error('Ошибка загрузки сценариев:', error);
-        // Если не удалось загрузить, используем fallback сценарии
-        AppState.scenarios = getFallbackScenarios();
-        DOM.totalScenariosEl.textContent = AppState.scenarios.length;
+        // Fallback or Alert
+        DOM.card.innerHTML = `<div class="loading-state"><p>Ошибка связи с реальностью.</p></div>`;
+        throw error;
     }
 }
 
-// Fallback сценарии на случай проблем с загрузкой
-function getFallbackScenarios() {
-    return [
-        {
-            "id": 1,
-            "title": "Что было бы, если бы интернет был изобретен в 19 веке?",
-            "intro": "Представьте мир, где технологии телеграфа эволюционировали в глобальную сеть обмена информацией за 100 лет до нашего времени.",
-            "changed": [
-                "Викторианские \"серверы\" на паровой тяге",
-                "Механические поисковые системы с перфокартами",
-                "Глобальная телеграфная сеть как предтеча интернета",
-                "Криптография как обязательный школьный предмет"
-            ],
-            "disappeared": [
-                "Централизованные монархии (сложнее контролировать информацию)",
-                "Медленные дипломатические процессы",
-                "Региональные диалекты (более быстрая унификация языка)",
-                "Концепция \"местных новостей\""
-            ],
-            "consequences": {
-                "internet": "\"Всемирная паутина\" из медных проводов и телеграфных столбов. Сайты — это физические локации с перфораторами и считывателями.",
-                "people": "Общество стало более технически грамотным, но также более параноидальным из-за утечек шифрованных сообщений.",
-                "technology": "Паровые компьютеры, аналитические машины Бэббиджа как стандарт, ранняя кибернетика."
-            },
-            "conclusion": "Технологический прогресс опередил социальный, создав мир продвинутых технологий при архаичных общественных структурах."
-        },
-        {
-            "id": 2,
-            "title": "Что было бы, если бы человечество никогда не изобрело колесо?",
-            "intro": "Альтернативная история, где фундаментальное изобретение человечества так и не было создано, что изменило всю траекторию развития цивилизации.",
-            "changed": [
-                "Транспорт на воздушной подушке (изобретен раньше)",
-                "Развитые системы каналов и водного транспорта",
-                "Архитектура без круглых элементов",
-                "Магнитные дороги для перемещения грузов"
-            ],
-            "disappeared": [
-                "Колесный транспорт (автомобили, поезда, велосипеды)",
-                "Конвейерное производство",
-                "Часы со стрелками",
-                "Спортивные игры с мячом"
-            ],
-            "consequences": {
-                "internet": "Развивался бы медленнее из-за сложностей с логистикой и созданием инфраструктуры.",
-                "people": "Города были бы компактнее, сосредоточены вокруг водных артерий. Путешествия стали бы редким и значимым событием.",
-                "technology": "Акцент на левитации, магнетизме и гидравлике. Механика вращательного движения осталась бы неизведанной областью."
-            },
-            "conclusion": "Цивилизации пришлось найти обходные пути для фундаментальных проблем, что привело к совершенно иному технологическому укладу."
-        },
-        {
-            "id": 3,
-            "title": "Что было бы, если бы книги остались привилегией элиты?",
-            "intro": "Мир, где печатный станок Гутенберга был уничтожен сразу после изобретения, а грамотность стала секретом, охраняемым правящим классом.",
-            "changed": [
-                "Устная традиция как основной способ передачи знаний",
-                "Развитая мнемоническая культура",
-                "Профессия \"говорящих книг\" (людей, запоминающих тексты)",
-                "Табу на письменность для низших классов"
-            ],
-            "disappeared": [
-                "Массовое образование",
-                "Научные журналы и академические публикации",
-                "Библиотеки в современном понимании",
-                "Новости в печатном формате"
-            ],
-            "consequences": {
-                "internet": "Никогда не был бы изобретен, так как не возникло бы концепции демократизации информации.",
-                "people": "Общество строго стратифицировано. Власть знания абсолютна. Критическое мышление — навык элиты.",
-                "technology": "Технический прогресс замедлен в тысячу раз. Каждое изобретение — тщательно охраняемый секрет гильдий."
-            },
-            "conclusion": "Контроль над информацией оказался мощнее контроля над ресурсами, создав стабильное, но абсолютно статичное общество."
+function filterScenarios(category) {
+    AppState.currentCategory = category;
+    
+    if (category === 'all') {
+        AppState.filteredScenarios = [...AppState.scenarios];
+    } else {
+        AppState.filteredScenarios = AppState.scenarios.filter(s => s.category === category);
+    }
+    
+    // Reset index when changing category, unless navigating via ID
+    AppState.currentIndex = 0;
+    
+    updateCategoryUI();
+}
+
+function calculateDailyScenario() {
+    // Deterministic algorithm: uses Date to pick a scenario index
+    const dateCode = Math.floor(Date.now() / CONFIG.dayMs);
+    const index = dateCode % AppState.scenarios.length;
+    AppState.dailyScenarioId = AppState.scenarios[index].id;
+}
+
+// --- ROUTING & NAVIGATION ---
+
+function handleRouting() {
+    const hash = window.location.hash;
+    
+    if (hash.startsWith('#id=')) {
+        // Load specific scenario
+        const id = parseInt(hash.replace('#id=', ''));
+        const foundIndex = AppState.filteredScenarios.findIndex(s => s.id === id);
+        
+        if (foundIndex !== -1) {
+            AppState.currentIndex = foundIndex;
+        } else {
+            // Check in global if not in filter
+            const globalIndex = AppState.scenarios.findIndex(s => s.id === id);
+            if (globalIndex !== -1) {
+                // Reset filter to all to show this one
+                filterScenarios('all');
+                AppState.currentIndex = globalIndex;
+            }
         }
-    ];
-}
-
-// Загрузка состояния приложения
-function loadAppState() {
-    try {
-        const saved = localStorage.getItem(CONFIG.appStateKey);
-        if (saved) {
-            const state = JSON.parse(saved);
-            AppState.currentScenarioIndex = state.currentScenarioIndex || 0;
-            AppState.theme = state.theme || CONFIG.defaultTheme;
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки состояния:', error);
-    }
-}
-
-// Сохранение состояния приложения
-function saveAppState() {
-    try {
-        const state = {
-            currentScenarioIndex: AppState.currentScenarioIndex,
-            theme: AppState.theme
-        };
-        localStorage.setItem(CONFIG.appStateKey, JSON.stringify(state));
-    } catch (error) {
-        console.error('Ошибка сохранения состояния:', error);
-    }
-}
-
-// Показ текущего сценария
-function showCurrentScenario() {
-    if (AppState.scenarios.length === 0) {
-        showErrorMessage();
+    } else if (hash === '#daily') {
+        loadDailyScenario();
         return;
     }
     
-    const scenario = AppState.scenarios[AppState.currentScenarioIndex];
-    if (scenario) {
-        showScenario(scenario);
-        updateUI();
-        saveAppState();
+    renderCurrentScenario();
+}
+
+function updateHash() {
+    const currentScenario = AppState.filteredScenarios[AppState.currentIndex];
+    if (currentScenario) {
+        history.replaceState(null, null, `#id=${currentScenario.id}`);
     }
 }
 
-// Показ следующего сценария
-function showNextScenario() {
-    // Анимация нажатия кнопки
-    DOM.nextScenarioBtn.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-        DOM.nextScenarioBtn.style.transform = '';
-    }, 150);
-    
-    // Увеличиваем индекс на 1
-    AppState.currentScenarioIndex++;
-    
-    // Если достигли конца массива, переходим к началу
-    if (AppState.currentScenarioIndex >= AppState.scenarios.length) {
-        AppState.currentScenarioIndex = 0;
+function nextScenario() {
+    AppState.currentIndex++;
+    if (AppState.currentIndex >= AppState.filteredScenarios.length) {
+        AppState.currentIndex = 0; // Loop
     }
-    
-    showCurrentScenario();
+    renderCurrentScenario();
+    updateHash();
+    scrollToTop();
 }
 
-// Показ предыдущего сценария
-function showPreviousScenario() {
-    // Анимация нажатия кнопки
-    DOM.prevScenarioBtn.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-        DOM.prevScenarioBtn.style.transform = '';
-    }, 150);
-    
-    // Уменьшаем индекс на 1
-    AppState.currentScenarioIndex--;
-    
-    // Если индекс стал меньше 0, переходим к последнему сценарию
-    if (AppState.currentScenarioIndex < 0) {
-        AppState.currentScenarioIndex = AppState.scenarios.length - 1;
+function prevScenario() {
+    AppState.currentIndex--;
+    if (AppState.currentIndex < 0) {
+        AppState.currentIndex = AppState.filteredScenarios.length - 1; // Loop back
     }
-    
-    showCurrentScenario();
+    renderCurrentScenario();
+    updateHash();
+    scrollToTop();
 }
 
-// Отображение сценария
-function showScenario(scenario) {
-    // Создаем HTML для сценария
-    const scenarioHTML = `
-        <h2 class="scenario-title fade-in">${scenario.title}</h2>
-        
-        <div class="scenario-intro fade-in delay-1">${scenario.intro}</div>
-        
-        <div class="scenario-section fade-in delay-2">
-            <h3 class="section-title"><i class="fas fa-plus-circle"></i> Что изменилось</h3>
-            <ul class="changed-list">
-                ${scenario.changed.map(item => `<li>${item}</li>`).join('')}
-            </ul>
-        </div>
-        
-        <div class="scenario-section fade-in delay-3">
-            <h3 class="section-title"><i class="fas fa-minus-circle"></i> Что исчезло</h3>
-            <ul class="disappeared-list">
-                ${scenario.disappeared.map(item => `<li>${item}</li>`).join('')}
-            </ul>
-        </div>
-        
-        <div class="scenario-section fade-in delay-4">
-            <h3 class="section-title"><i class="fas fa-project-diagram"></i> Последствия</h3>
-            <div class="consequences-grid">
-                <div class="consequence-item">
-                    <h4 class="consequence-title">Интернет</h4>
-                    <p>${scenario.consequences.internet}</p>
+function loadDailyScenario() {
+    const dailyIndex = AppState.scenarios.findIndex(s => s.id === AppState.dailyScenarioId);
+    if (dailyIndex !== -1) {
+        filterScenarios('all');
+        AppState.currentIndex = dailyIndex;
+        renderCurrentScenario();
+        updateHash();
+        showToast('🌟 Сценарий дня загружен');
+    }
+}
+
+// --- RENDERING ---
+
+function renderCurrentScenario() {
+    const scenario = AppState.filteredScenarios[AppState.currentIndex];
+    if (!scenario) return;
+
+    // Calculate reading time (Roughly 200 words/min)
+    const textContent = JSON.stringify(scenario);
+    const words = textContent.split(' ').length;
+    const timeSec = Math.ceil(words / 3.5); // Fast reading adjustment
+    
+    // Update Meta
+    DOM.metaCategory.textContent = getCategoryName(scenario.category);
+    DOM.metaTime.innerHTML = `<i class="far fa-clock"></i> ~${timeSec} сек`;
+
+    // Is Daily?
+    const isDaily = scenario.id === AppState.dailyScenarioId;
+    const dailyBadge = isDaily ? `<div style="color: var(--accent-primary); font-size: 0.9rem; margin-bottom: 8px; font-weight: 600;"><i class="fas fa-star"></i> Выбор вселенной на сегодня</div>` : '';
+
+    // Generate HTML
+    const html = `
+        <div class="scenario-content fade-in">
+            ${dailyBadge}
+            <h2 class="scenario-title">${scenario.title}</h2>
+            <div class="scenario-intro">${scenario.intro}</div>
+
+            <div class="comparison-grid">
+                <div class="comparison-column col-changed">
+                    <h3><i class="fas fa-plus"></i> Появилось</h3>
+                    <ul class="feature-list">
+                        ${scenario.changed.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
                 </div>
-                <div class="consequence-item">
-                    <h4 class="consequence-title">Люди</h4>
-                    <p>${scenario.consequences.people}</p>
+                <div class="comparison-column col-disappeared">
+                    <h3><i class="fas fa-minus"></i> Исчезло</h3>
+                    <ul class="feature-list">
+                        ${scenario.disappeared.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
                 </div>
-                <div class="consequence-item">
-                    <h4 class="consequence-title">Технологии</h4>
-                    <p>${scenario.consequences.technology}</p>
+            </div>
+
+            <div class="deep-dive">
+                <button class="deep-dive-toggle" onclick="toggleDeepDive(this)">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Копнуть глубже: Последствия</span>
+                    <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 0.8em;"></i>
+                </button>
+                <div class="deep-dive-content">
+                    <div class="consequence-block">
+                        <h4>🌍 Интернет и Сеть</h4>
+                        <p>${scenario.consequences.internet}</p>
+                    </div>
+                    <div class="consequence-block">
+                        <h4>👥 Общество</h4>
+                        <p>${scenario.consequences.people}</p>
+                    </div>
+                    <div class="consequence-block">
+                        <h4>🔧 Технологии</h4>
+                        <p>${scenario.consequences.technology}</p>
+                    </div>
+                    <div class="consequence-block" style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
+                        <h4>🏁 Вывод</h4>
+                        <p style="font-style: italic; color: var(--text-primary);">${scenario.conclusion}</p>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="scenario-conclusion fade-in delay-5">${scenario.conclusion}</div>
     `;
+
+    DOM.card.innerHTML = html;
+}
+
+// Global function for onclick handler in HTML
+window.toggleDeepDive = function(btn) {
+    const content = btn.nextElementSibling;
+    const icon = btn.querySelector('.fa-chevron-down');
     
-    // Устанавливаем HTML с анимацией
-    DOM.scenarioCard.style.opacity = '0';
-    
+    if (content.classList.contains('visible')) {
+        content.classList.remove('visible');
+        icon.style.transform = 'rotate(0deg)';
+    } else {
+        content.classList.add('visible');
+        icon.style.transform = 'rotate(180deg)';
+    }
+}
+
+// --- UTILS & UI ---
+
+function getCategoryName(catKey) {
+    const map = {
+        'tech': 'Технологии',
+        'society': 'Общество',
+        'nature': 'Природа',
+        'human': 'Человек'
+    };
+    return map[catKey] || 'Разное';
+}
+
+function updateCategoryUI() {
+    DOM.categoryPills.forEach(pill => {
+        if (pill.dataset.category === AppState.currentCategory) {
+            pill.classList.add('active');
+        } else {
+            pill.classList.remove('active');
+        }
+    });
+}
+
+function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function loadTheme() {
+    const saved = localStorage.getItem('theme');
+    if (saved) {
+        AppState.theme = saved;
+        document.body.className = saved === 'light' ? 'light-theme' : '';
+        updateThemeIcon();
+    }
+}
+
+function toggleTheme() {
+    AppState.theme = AppState.theme === 'dark' ? 'light' : 'dark';
+    document.body.className = AppState.theme === 'light' ? 'light-theme' : '';
+    localStorage.setItem('theme', AppState.theme);
+    updateThemeIcon();
+}
+
+function updateThemeIcon() {
+    const icon = DOM.themeToggle.querySelector('i');
+    icon.className = AppState.theme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+}
+
+function shareScenario() {
+    const current = AppState.filteredScenarios[AppState.currentIndex];
+    const url = `${window.location.origin}${window.location.pathname}#id=${current.id}`;
+    const text = `Что было бы, если... "${current.title}" 🌌\n\n${url}`;
+
+    if (navigator.share) {
+        navigator.share({
+            title: 'What If',
+            text: text,
+            url: url
+        }).catch(console.error);
+    } else {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Ссылка скопирована!');
+        });
+    }
+}
+
+function showToast(msg) {
+    DOM.toast.textContent = msg;
+    DOM.toast.classList.add('show');
     setTimeout(() => {
-        DOM.scenarioCard.innerHTML = scenarioHTML;
-        DOM.scenarioCard.style.opacity = '1';
-    }, 300);
+        DOM.toast.classList.remove('show');
+    }, 2500);
 }
 
-// Обновление UI
-function updateUI() {
-    // Обновляем счетчик (индекс + 1, так как индексация с 0)
-    DOM.currentScenarioEl.textContent = AppState.currentScenarioIndex + 1;
-    DOM.totalScenariosEl.textContent = AppState.scenarios.length;
-}
-
-// Показ сообщения об ошибке
-function showErrorMessage() {
-    DOM.scenarioCard.innerHTML = `
-        <div class="error-state">
-            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--danger-color); margin-bottom: 1rem;"></i>
-            <h3>Не удалось загрузить сценарии</h3>
-            <p>Пожалуйста, проверьте подключение к интернету и обновите страницу.</p>
-            <button class="btn-primary" onclick="location.reload()" style="margin-top: 1rem;">
-                <i class="fas fa-redo"></i> Обновить страницу
-            </button>
+function showErrorState() {
+    DOM.card.innerHTML = `
+        <div style="text-align:center; padding: 40px;">
+            <h3>Сбой матрицы</h3>
+            <p>Не удалось загрузить варианты реальности.</p>
         </div>
     `;
 }
 
-// Инициализация темы
-function initTheme() {
-    // Устанавливаем тему
-    setTheme(AppState.theme);
-    
-    // Обновляем иконку кнопки
-    updateThemeIcon();
-}
+// --- EVENT LISTENERS ---
 
-// Установка темы
-function setTheme(theme) {
-    AppState.theme = theme;
-    document.body.classList.toggle('light-theme', theme === 'light');
-    saveAppState();
-}
-
-// Переключение темы
-function toggleTheme() {
-    const newTheme = AppState.theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    updateThemeIcon();
-}
-
-// Обновление иконки темы
-function updateThemeIcon() {
-    const icon = DOM.themeToggle.querySelector('i');
-    if (AppState.theme === 'dark') {
-        icon.className = 'fas fa-moon';
-    } else {
-        icon.className = 'fas fa-sun';
-    }
-}
-
-// Настройка обработчиков событий
 function setupEventListeners() {
-    // Кнопка "Следующий сценарий"
-    DOM.nextScenarioBtn.addEventListener('click', showNextScenario);
-    
-    // Кнопка "Предыдущий сценарий"
-    DOM.prevScenarioBtn.addEventListener('click', showPreviousScenario);
-    
-    // Кнопка переключения темы
+    DOM.nextBtn.addEventListener('click', nextScenario);
+    DOM.prevBtn.addEventListener('click', prevScenario);
+    DOM.shareBtn.addEventListener('click', shareScenario);
+    DOM.dailyBtn.addEventListener('click', loadDailyScenario);
     DOM.themeToggle.addEventListener('click', toggleTheme);
-    
-    // Обработка клавиатуры
-    document.addEventListener('keydown', (e) => {
-        // Стрелка вправо или пробел для следующего сценария
-        if (e.code === 'ArrowRight' || e.code === 'Space') {
-            e.preventDefault();
-            showNextScenario();
-        }
-        
-        // Стрелка влево для предыдущего сценария
-        if (e.code === 'ArrowLeft') {
-            e.preventDefault();
-            showPreviousScenario();
-        }
-        
-        // T для переключения темы
-        if (e.code === 'KeyT' && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            toggleTheme();
-        }
+
+    DOM.categoryPills.forEach(pill => {
+        pill.addEventListener('click', (e) => {
+            const cat = e.target.dataset.category;
+            filterScenarios(cat);
+            renderCurrentScenario();
+            updateHash();
+        });
     });
-    
-    // Предотвращаем прокрутку страницы при нажатии пробела
-    document.addEventListener('keyup', (e) => {
-        if (e.code === 'Space' && e.target === document.body) {
-            e.preventDefault();
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === 'Space') {
+            e.preventDefault(); // Stop scroll
+            nextScenario();
         }
+        if (e.key === 'ArrowLeft') prevScenario();
     });
 }
 
-// Инициализация приложения при загрузке страницы
+// Start
 document.addEventListener('DOMContentLoaded', initApp);
