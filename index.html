@@ -1,101 +1,82 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#8b5cf6">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="What If">
-<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1534/1534060.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>What If — Лаборатория альтернативной реальности</title>
-    <meta name="description" content="Интеллектуальный симулятор альтернативных миров. Что было бы, если...?">
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#8b5cf6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1534/1534060.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌌</text></svg>">
 </head>
 <body>
     <div class="app-background"></div>
-    
     <div class="container">
         <header class="header">
-            <button id="installAppBtn" style="display:none;" onclick="installApp()" class="btn-share">
-    <i class="fas fa-download"></i>
-    <span>Установить</span>
-</button>
-            <div class="logo-container">
-                <div class="logo">What If</div>
-                <div class="tagline">Симулятор реальностей</div>
+            <div class="logo-group">
+                <div class="logo-container">
+                    <div class="logo-icon">🌌</div>
+                    <div class="logo-text">
+                        <h1>What If</h1>
+                        <p class="tagline">Лаборатория реальности</p>
+                    </div>
+                </div>
+                <button id="installAppBtn" class="btn-install-mini" style="display: none;" onclick="installApp()">
+                    <i class="fas fa-download"></i>
+                    <span>Установить</span>
+                </button>
             </div>
             
-            <div class="header-controls">
-                <button id="dailyScenarioBtn" class="icon-btn" title="Сценарий дня">
-                    <i class="fas fa-star"></i>
+            <div class="header-actions">
+                <button id="dailyScenarioBtn" class="btn-icon" title="Сценарий дня">
+                    <i class="far fa-calendar-star"></i>
                 </button>
-                <button id="themeToggle" class="icon-btn" title="Тема">
+                <button id="themeToggle" class="btn-icon" aria-label="Сменить тему">
                     <i class="fas fa-moon"></i>
                 </button>
             </div>
         </header>
 
         <nav class="categories-nav">
-            <button class="category-pill active" data-category="all">Все</button>
+            <button class="category-pill active" data-category="all">Все миры</button>
             <button class="category-pill" data-category="tech">Технологии</button>
             <button class="category-pill" data-category="society">Общество</button>
             <button class="category-pill" data-category="nature">Природа</button>
-            <button class="category-pill" data-category="human">Человек</button>
         </nav>
 
-        <main class="scenario-container">
-            <div class="scenario-card" id="scenarioCard">
-                <div class="loading-state">
-                    <div class="loading-pulse"></div>
-                    <p>Генерация реальности...</p>
-                </div>
+        <main id="scenarioCard" class="scenario-card">
+            </main>
+
+        <div class="controls-wrapper">
+            <div class="meta-info">
+                <span id="scenarioCategory" class="meta-tag">Загрузка...</span>
+                <span id="readingTime" class="meta-tag"><i class="far fa-clock"></i> ~40 сек</span>
             </div>
-
-            <div class="controls-wrapper">
-                <div class="meta-info">
-                    <span id="scenarioCategory" class="meta-tag">Загрузка...</span>
-                    <span id="readingTime" class="meta-tag"><i class="far fa-clock"></i> ~40 сек</span>
-                </div>
-
-                <div class="nav-buttons">
-                    <button class="btn-secondary" id="prevScenarioBtn">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    
-                    <button class="btn-share" id="shareBtn">
-                        <i class="fas fa-share-alt"></i>
-                        <span>Поделиться миром</span>
-                    </button>
-
-                    <button class="btn-primary" id="nextScenarioBtn">
-                        <span>Дальше</span>
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
+            <div class="nav-buttons">
+                <button class="btn-secondary" id="prevScenarioBtn"><i class="fas fa-chevron-left"></i></button>
+                <button class="btn-share" id="shareBtn"><i class="fas fa-share-alt"></i><span>Поделиться</span></button>
+                <button class="btn-primary" id="nextScenarioBtn"><span>Дальше</span><i class="fas fa-chevron-right"></i></button>
             </div>
-        </main>
+        </div>
 
         <footer class="footer">
             <div class="footer-links">
-                <a href="https://t.me/neuron_p2p" target="_blank" class="footer-link">Предложить сценарий</a>
+                <a href="https://t.me/neuron_p2p" target="_blank" class="footer-link">Предложить идею</a>
                 <span class="separator">•</span>
-                <a href="https://neuron-p2p.ru" id="subscribeBtn" class="footer-link">Подписаться</a>
+                <a href="https://neuron-p2p.ru" class="footer-link">Neuron © 2025</a>
             </div>
-            <p class="credit">Neuron Ecosystem © 2025</p>
         </footer>
     </div>
-
     <div id="toast" class="toast">Ссылка скопирована</div>
-
     <script src="app.js"></script>
 </body>
 </html>
