@@ -9,16 +9,13 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// Слушаем событие установки (только для Android/Chrome)
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    // Показываем кнопку установки, если она у тебя есть в HTML
     const installBtn = document.getElementById('installAppBtn');
     if (installBtn) installBtn.style.display = 'flex';
 });
 
-// Функция для вызова окна установки (повесь на любую кнопку)
 async function installApp() {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
@@ -29,25 +26,26 @@ async function installApp() {
     }
     deferredPrompt = null;
 }
-// CONFIGURATION
+
+// --- CONFIGURATION ---
 const CONFIG = {
     scenariosFile: 'scenarios.json',
     defaultTheme: 'dark',
     appStateKey: 'whatIf_v2_state',
-    dayMs: 86400000 // 24 hours in ms
+    dayMs: 86400000
 };
 
-// GLOBAL STATE
+// --- GLOBAL STATE ---
 const AppState = {
     scenarios: [],
-    filteredScenarios: [], // For categories
+    filteredScenarios: [],
     currentIndex: 0,
     currentCategory: 'all',
     theme: CONFIG.defaultTheme,
     dailyScenarioId: null
 };
 
-// DOM ELEMENTS
+// --- DOM ELEMENTS ---
 const DOM = {
     card: document.getElementById('scenarioCard'),
     prevBtn: document.getElementById('prevScenarioBtn'),
@@ -58,11 +56,11 @@ const DOM = {
     categoryPills: document.querySelectorAll('.category-pill'),
     metaCategory: document.getElementById('scenarioCategory'),
     metaTime: document.getElementById('readingTime'),
-    toast: document.getElementById('toast')
+    toast: document.getElementById('toast'),
+    installBtn: document.getElementById('installAppBtn')
 };
 
 // --- INITIALIZATION ---
-
 async function initApp() {
     loadTheme();
     setupEventListeners();
@@ -70,240 +68,116 @@ async function initApp() {
     try {
         await loadScenarios();
         calculateDailyScenario();
-        handleRouting(); // Check URL hash
+        handleRouting();
     } catch (error) {
-        console.error("Critical Init Error:", error);
+        console.error("Init Error:", error);
         showErrorState();
     }
 }
 
-// --- DATA LOGIC ---
-
 async function loadScenarios() {
-    try {
-        const response = await fetch(CONFIG.scenariosFile);
-        if (!response.ok) throw new Error('Failed to load scenarios');
-        
-        AppState.scenarios = await response.json();
-        
-        // Initial filter (all)
-        filterScenarios('all');
-        
-    } catch (error) {
-        // Fallback or Alert
-        DOM.card.innerHTML = `<div class="loading-state"><p>Ошибка связи с реальностью.</p></div>`;
-        throw error;
-    }
+    const response = await fetch(CONFIG.scenariosFile);
+    AppState.scenarios = await response.json();
+    filterScenarios('all');
 }
 
 function filterScenarios(category) {
     AppState.currentCategory = category;
-    
-    if (category === 'all') {
-        AppState.filteredScenarios = [...AppState.scenarios];
-    } else {
-        AppState.filteredScenarios = AppState.scenarios.filter(s => s.category === category);
-    }
-    
-    // Reset index when changing category, unless navigating via ID
+    AppState.filteredScenarios = category === 'all' 
+        ? [...AppState.scenarios] 
+        : AppState.scenarios.filter(s => s.category === category);
     AppState.currentIndex = 0;
-    
     updateCategoryUI();
 }
 
 function calculateDailyScenario() {
-    // Deterministic algorithm: uses Date to pick a scenario index
     const dateCode = Math.floor(Date.now() / CONFIG.dayMs);
     const index = dateCode % AppState.scenarios.length;
     AppState.dailyScenarioId = AppState.scenarios[index].id;
 }
 
-// --- ROUTING & NAVIGATION ---
-
 function handleRouting() {
     const hash = window.location.hash;
-    
     if (hash.startsWith('#id=')) {
-        // Load specific scenario
         const id = parseInt(hash.replace('#id=', ''));
-        const foundIndex = AppState.filteredScenarios.findIndex(s => s.id === id);
-        
+        const foundIndex = AppState.scenarios.findIndex(s => s.id === id);
         if (foundIndex !== -1) {
+            filterScenarios('all');
             AppState.currentIndex = foundIndex;
-        } else {
-            // Check in global if not in filter
-            const globalIndex = AppState.scenarios.findIndex(s => s.id === id);
-            if (globalIndex !== -1) {
-                // Reset filter to all to show this one
-                filterScenarios('all');
-                AppState.currentIndex = globalIndex;
-            }
         }
-    } else if (hash === '#daily') {
-        loadDailyScenario();
-        return;
     }
-    
     renderCurrentScenario();
 }
 
 function updateHash() {
-    const currentScenario = AppState.filteredScenarios[AppState.currentIndex];
-    if (currentScenario) {
-        history.replaceState(null, null, `#id=${currentScenario.id}`);
-    }
+    const s = AppState.filteredScenarios[AppState.currentIndex];
+    if (s) history.replaceState(null, null, `#id=${s.id}`);
 }
-
-function nextScenario() {
-    AppState.currentIndex++;
-    if (AppState.currentIndex >= AppState.filteredScenarios.length) {
-        AppState.currentIndex = 0; // Loop
-    }
-    renderCurrentScenario();
-    updateHash();
-    scrollToTop();
-}
-
-function prevScenario() {
-    AppState.currentIndex--;
-    if (AppState.currentIndex < 0) {
-        AppState.currentIndex = AppState.filteredScenarios.length - 1; // Loop back
-    }
-    renderCurrentScenario();
-    updateHash();
-    scrollToTop();
-}
-
-function loadDailyScenario() {
-    const dailyIndex = AppState.scenarios.findIndex(s => s.id === AppState.dailyScenarioId);
-    if (dailyIndex !== -1) {
-        filterScenarios('all');
-        AppState.currentIndex = dailyIndex;
-        renderCurrentScenario();
-        updateHash();
-        showToast('🌟 Сценарий дня загружен');
-    }
-}
-
-// --- RENDERING ---
 
 function renderCurrentScenario() {
-    const scenario = AppState.filteredScenarios[AppState.currentIndex];
-    if (!scenario) return;
+    const s = AppState.filteredScenarios[AppState.currentIndex];
+    if (!s) return;
 
-    // Calculate reading time (Roughly 200 words/min)
-    const textContent = JSON.stringify(scenario);
-    const words = textContent.split(' ').length;
-    const timeSec = Math.ceil(words / 3.5); // Fast reading adjustment
+    DOM.metaCategory.textContent = getCategoryName(s.category);
     
-    // Update Meta
-    DOM.metaCategory.textContent = getCategoryName(scenario.category);
-    DOM.metaTime.innerHTML = `<i class="far fa-clock"></i> ~${timeSec} сек`;
+    const isDaily = s.id === AppState.dailyScenarioId;
+    const dailyBadge = isDaily ? `<div style="color: var(--accent-primary); font-size: 0.9rem; margin-bottom: 8px; font-weight: 600;"><i class="fas fa-star"></i> ВЫБОР ВСЕЛЕННОЙ</div>` : '';
 
-    // Is Daily?
-    const isDaily = scenario.id === AppState.dailyScenarioId;
-    const dailyBadge = isDaily ? `<div style="color: var(--accent-primary); font-size: 0.9rem; margin-bottom: 8px; font-weight: 600;"><i class="fas fa-star"></i> Выбор вселенной на сегодня</div>` : '';
-
-    // Generate HTML
-    const html = `
+    DOM.card.innerHTML = `
         <div class="scenario-content fade-in">
             ${dailyBadge}
-            <h2 class="scenario-title">${scenario.title}</h2>
-            <div class="scenario-intro">${scenario.intro}</div>
-
+            <h2 class="scenario-title">${s.title}</h2>
+            <div class="scenario-intro">${s.intro}</div>
             <div class="comparison-grid">
                 <div class="comparison-column col-changed">
                     <h3><i class="fas fa-plus"></i> Появилось</h3>
-                    <ul class="feature-list">
-                        ${scenario.changed.map(item => `<li>${item}</li>`).join('')}
-                    </ul>
+                    <ul class="feature-list">${s.changed.map(i => `<li>${i}</li>`).join('')}</ul>
                 </div>
                 <div class="comparison-column col-disappeared">
                     <h3><i class="fas fa-minus"></i> Исчезло</h3>
-                    <ul class="feature-list">
-                        ${scenario.disappeared.map(item => `<li>${item}</li>`).join('')}
-                    </ul>
+                    <ul class="feature-list">${s.disappeared.map(i => `<li>${i}</li>`).join('')}</ul>
                 </div>
             </div>
-
             <div class="deep-dive">
                 <button class="deep-dive-toggle" onclick="toggleDeepDive(this)">
                     <i class="fas fa-layer-group"></i>
-                    <span>Копнуть глубже: Последствия</span>
-                    <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 0.8em;"></i>
+                    <span>Последствия и выводы</span>
+                    <i class="fas fa-chevron-down" style="margin-left: auto;"></i>
                 </button>
                 <div class="deep-dive-content">
-                    <div class="consequence-block">
-                        <h4>🌍 Интернет и Сеть</h4>
-                        <p>${scenario.consequences.internet}</p>
-                    </div>
-                    <div class="consequence-block">
-                        <h4>👥 Общество</h4>
-                        <p>${scenario.consequences.people}</p>
-                    </div>
-                    <div class="consequence-block">
-                        <h4>🔧 Технологии</h4>
-                        <p>${scenario.consequences.technology}</p>
-                    </div>
-                    <div class="consequence-block" style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
-                        <h4>🏁 Вывод</h4>
-                        <p style="font-style: italic; color: var(--text-primary);">${scenario.conclusion}</p>
+                    <div class="consequence-block"><h4>🌍 Сеть</h4><p>${s.consequences.internet}</p></div>
+                    <div class="consequence-block"><h4>👥 Общество</h4><p>${s.consequences.people}</p></div>
+                    <div class="consequence-block"><h4>🔧 Технологии</h4><p>${s.consequences.technology}</p></div>
+                    <div class="consequence-block" style="border-top: 1px dashed var(--border-color); padding-top: 15px;">
+                        <h4>🏁 Итог</h4><p><i>${s.conclusion}</i></p>
                     </div>
                 </div>
             </div>
         </div>
     `;
-
-    DOM.card.innerHTML = html;
 }
 
-// Global function for onclick handler in HTML
 window.toggleDeepDive = function(btn) {
     const content = btn.nextElementSibling;
     const icon = btn.querySelector('.fa-chevron-down');
-    
-    if (content.classList.contains('visible')) {
-        content.classList.remove('visible');
-        icon.style.transform = 'rotate(0deg)';
-    } else {
-        content.classList.add('visible');
-        icon.style.transform = 'rotate(180deg)';
-    }
-}
+    content.classList.toggle('visible');
+    icon.style.transform = content.classList.contains('visible') ? 'rotate(180deg)' : 'rotate(0deg)';
+};
 
-// --- UTILS & UI ---
-
-function getCategoryName(catKey) {
-    const map = {
-        'tech': 'Технологии',
-        'society': 'Общество',
-        'nature': 'Природа',
-        'human': 'Человек'
-    };
-    return map[catKey] || 'Разное';
+function getCategoryName(cat) {
+    const map = { 'tech': 'Технологии', 'society': 'Общество', 'nature': 'Природа', 'human': 'Человек' };
+    return map[cat] || 'Разное';
 }
 
 function updateCategoryUI() {
-    DOM.categoryPills.forEach(pill => {
-        if (pill.dataset.category === AppState.currentCategory) {
-            pill.classList.add('active');
-        } else {
-            pill.classList.remove('active');
-        }
-    });
-}
-
-function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    DOM.categoryPills.forEach(p => p.classList.toggle('active', p.dataset.category === AppState.currentCategory));
 }
 
 function loadTheme() {
-    const saved = localStorage.getItem('theme');
-    if (saved) {
-        AppState.theme = saved;
-        document.body.className = saved === 'light' ? 'light-theme' : '';
-        updateThemeIcon();
-    }
+    const saved = localStorage.getItem('theme') || CONFIG.defaultTheme;
+    AppState.theme = saved;
+    document.body.className = saved === 'light' ? 'light-theme' : '';
+    updateThemeIcon();
 }
 
 function toggleTheme() {
@@ -318,68 +192,24 @@ function updateThemeIcon() {
     icon.className = AppState.theme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
 }
 
-function shareScenario() {
-    const current = AppState.filteredScenarios[AppState.currentIndex];
-    const url = `${window.location.origin}${window.location.pathname}#id=${current.id}`;
-    const text = `Что было бы, если... "${current.title}" 🌌\n\n${url}`;
-
-    if (navigator.share) {
-        navigator.share({
-            title: 'What If',
-            text: text,
-            url: url
-        }).catch(console.error);
-    } else {
-        navigator.clipboard.writeText(text).then(() => {
-            showToast('Ссылка скопирована!');
-        });
-    }
-}
-
-function showToast(msg) {
-    DOM.toast.textContent = msg;
-    DOM.toast.classList.add('show');
-    setTimeout(() => {
-        DOM.toast.classList.remove('show');
-    }, 2500);
+function setupEventListeners() {
+    DOM.nextBtn.addEventListener('click', () => { AppState.currentIndex = (AppState.currentIndex + 1) % AppState.filteredScenarios.length; renderCurrentScenario(); updateHash(); window.scrollTo({top:0, behavior:'smooth'}); });
+    DOM.prevBtn.addEventListener('click', () => { AppState.currentIndex = (AppState.currentIndex - 1 + AppState.filteredScenarios.length) % AppState.filteredScenarios.length; renderCurrentScenario(); updateHash(); window.scrollTo({top:0, behavior:'smooth'}); });
+    DOM.themeToggle.addEventListener('click', toggleTheme);
+    DOM.shareBtn.addEventListener('click', () => {
+        const s = AppState.filteredScenarios[AppState.currentIndex];
+        const url = `${window.location.origin}${window.location.pathname}#id=${s.id}`;
+        navigator.clipboard.writeText(url).then(() => { DOM.toast.classList.add('show'); setTimeout(() => DOM.toast.classList.remove('show'), 2000); });
+    });
+    DOM.dailyBtn.addEventListener('click', () => {
+        const idx = AppState.scenarios.findIndex(s => s.id === AppState.dailyScenarioId);
+        if (idx !== -1) { filterScenarios('all'); AppState.currentIndex = idx; renderCurrentScenario(); updateHash(); }
+    });
+    DOM.categoryPills.forEach(p => p.addEventListener('click', () => { filterScenarios(p.dataset.category); renderCurrentScenario(); updateHash(); }));
 }
 
 function showErrorState() {
-    DOM.card.innerHTML = `
-        <div style="text-align:center; padding: 40px;">
-            <h3>Сбой матрицы</h3>
-            <p>Не удалось загрузить варианты реальности.</p>
-        </div>
-    `;
+    DOM.card.innerHTML = `<div style="text-align:center; padding: 40px;"><h3>Сбой матрицы</h3><p>Не удалось загрузить данные.</p></div>`;
 }
 
-// --- EVENT LISTENERS ---
-
-function setupEventListeners() {
-    DOM.nextBtn.addEventListener('click', nextScenario);
-    DOM.prevBtn.addEventListener('click', prevScenario);
-    DOM.shareBtn.addEventListener('click', shareScenario);
-    DOM.dailyBtn.addEventListener('click', loadDailyScenario);
-    DOM.themeToggle.addEventListener('click', toggleTheme);
-
-    DOM.categoryPills.forEach(pill => {
-        pill.addEventListener('click', (e) => {
-            const cat = e.target.dataset.category;
-            filterScenarios(cat);
-            renderCurrentScenario();
-            updateHash();
-        });
-    });
-
-    // Keyboard support
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight' || e.key === 'Space') {
-            e.preventDefault(); // Stop scroll
-            nextScenario();
-        }
-        if (e.key === 'ArrowLeft') prevScenario();
-    });
-}
-
-// Start
 document.addEventListener('DOMContentLoaded', initApp);
