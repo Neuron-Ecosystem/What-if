@@ -1,3 +1,34 @@
+// --- PWA LOGIC ---
+let deferredPrompt;
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW active'))
+            .catch(err => console.error('SW error', err));
+    });
+}
+
+// Слушаем событие установки (только для Android/Chrome)
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Показываем кнопку установки, если она у тебя есть в HTML
+    const installBtn = document.getElementById('installAppBtn');
+    if (installBtn) installBtn.style.display = 'flex';
+});
+
+// Функция для вызова окна установки (повесь на любую кнопку)
+async function installApp() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+        const installBtn = document.getElementById('installAppBtn');
+        if (installBtn) installBtn.style.display = 'none';
+    }
+    deferredPrompt = null;
+}
 // CONFIGURATION
 const CONFIG = {
     scenariosFile: 'scenarios.json',
