@@ -12,6 +12,10 @@
     --accent-glow: rgba(139, 92, 246, 0.3);
     --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
     
+    /* Статусы (ВОЗВРАЩЕНО) */
+    --success: #10b981;
+    --danger: #ef4444;
+    
     /* UI Элементы */
     --border-color: #27272a;
     --border-hover: #3f3f46;
@@ -37,16 +41,14 @@ body {
     color: var(--text-primary);
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
+    margin: 0;
     overflow-x: hidden;
-    transition: background-color 0.3s ease;
 }
 
 .container {
     max-width: 800px;
     margin: 0 auto;
     padding: 0 20px;
-    position: relative;
-    z-index: 1;
 }
 
 /* --- HEADER --- */
@@ -54,22 +56,17 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 30px 0;
+    padding: 40px 0 20px 0;
 }
 
 .logo-text h1 {
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 800;
+    margin: 0;
     letter-spacing: -1px;
     background: var(--accent-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-}
-
-.tagline {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    font-weight: 500;
 }
 
 .header-actions {
@@ -78,9 +75,8 @@ body {
     gap: 12px;
 }
 
-/* Кнопка установки (Главная) */
 .btn-install-main {
-    display: none; /* Включается через JS */
+    display: none;
     align-items: center;
     gap: 8px;
     background: var(--accent-primary);
@@ -95,12 +91,6 @@ body {
     box-shadow: 0 4px 15px var(--accent-glow);
 }
 
-.btn-install-main:hover {
-    transform: translateY(-2px);
-    filter: brightness(1.1);
-}
-
-/* Стандартные кнопки-иконки */
 .btn-icon {
     width: 44px;
     height: 44px;
@@ -117,7 +107,6 @@ body {
 
 .btn-icon:hover {
     border-color: var(--accent-primary);
-    color: var(--accent-primary);
     background: var(--accent-glow);
 }
 
@@ -127,7 +116,7 @@ body {
     gap: 10px;
     margin-bottom: 30px;
     overflow-x: auto;
-    padding-bottom: 5px;
+    padding: 5px 0;
 }
 
 .category-pill {
@@ -137,7 +126,6 @@ body {
     border-radius: 100px;
     color: var(--text-secondary);
     font-size: 0.9rem;
-    font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
     transition: var(--transition);
@@ -145,67 +133,85 @@ body {
 
 .category-pill.active {
     background: var(--accent-primary);
-    border-color: var(--accent-primary);
     color: white;
 }
 
-/* --- КАРТОЧКА --- */
+/* --- КАРТОЧКА СЦЕНАРИЯ (ГЛАВНОЕ) --- */
 .scenario-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: 40px;
     margin-bottom: 24px;
-    min-height: 400px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
 .scenario-title {
     font-size: 2.25rem;
     font-weight: 700;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     line-height: 1.2;
 }
 
 .scenario-intro {
     font-size: 1.1rem;
     color: var(--text-secondary);
-    margin-bottom: 30px;
+    margin-bottom: 40px;
 }
 
+/* СЕТКА СРАВНЕНИЯ */
 .comparison-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-bottom: 30px;
+    gap: 30px;
+    margin-bottom: 40px;
 }
 
 .comparison-column h3 {
-    font-size: 1rem;
-    margin-bottom: 15px;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
+/* Цвета для списков (КАК БЫЛО РАНЬШЕ) */
 .col-changed h3 { color: var(--success); }
 .col-disappeared h3 { color: var(--danger); }
 
 .feature-list {
     list-style: none;
+    padding: 0;
 }
 
 .feature-list li {
-    padding: 8px 0;
+    position: relative;
+    padding: 12px 0 12px 28px;
     border-bottom: 1px solid var(--border-color);
     font-size: 0.95rem;
+    color: var(--text-primary);
 }
 
-/* --- ГЛУБОКОЕ ПОГРУЖЕНИЕ --- */
+/* Иконки перед пунктами */
+.col-changed li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--success);
+    font-weight: bold;
+}
+
+.col-disappeared li::before {
+    content: "✕";
+    position: absolute;
+    left: 0;
+    color: var(--danger);
+    font-weight: bold;
+}
+
+/* --- DEEP DIVE --- */
 .deep-dive {
-    margin-top: 30px;
-    border-top: 1px solid var(--border-color);
-    padding-top: 20px;
+    margin-top: 20px;
 }
 
 .deep-dive-toggle {
@@ -213,19 +219,20 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 15px;
+    padding: 18px;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     color: var(--text-primary);
     cursor: pointer;
     font-weight: 600;
+    transition: var(--transition);
 }
 
 .deep-dive-content {
     display: none;
-    padding: 20px;
-    background: var(--bg-primary);
+    padding: 25px;
+    background: rgba(9, 9, 11, 0.5);
     border: 1px solid var(--border-color);
     border-top: none;
     border-radius: 0 0 var(--radius-md) var(--radius-md);
@@ -234,30 +241,26 @@ body {
 .deep-dive-content.visible { display: block; }
 
 .consequence-block { margin-bottom: 20px; }
-.consequence-block h4 { color: var(--accent-primary); margin-bottom: 8px; font-size: 0.9rem; text-transform: uppercase; }
+.consequence-block h4 { 
+    color: var(--accent-primary); 
+    margin-bottom: 8px; 
+    font-size: 0.8rem; 
+    letter-spacing: 1px;
+    text-transform: uppercase; 
+}
 
-/* --- CONTROLS --- */
+/* --- КНОПКИ УПРАВЛЕНИЯ --- */
 .controls-wrapper {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 20px;
-}
-
-.meta-info { display: flex; gap: 12px; }
-.meta-tag {
-    padding: 4px 12px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 100px;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
+    padding-bottom: 40px;
 }
 
 .nav-buttons { display: flex; gap: 12px; }
 
 .btn-primary, .btn-secondary, .btn-share {
-    height: 48px;
+    height: 52px;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -272,6 +275,9 @@ body {
 .btn-secondary { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
 .btn-share { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-color); }
 
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px var(--accent-glow); }
+
+/* --- TOAST --- */
 .toast {
     position: fixed;
     bottom: 30px;
@@ -281,19 +287,26 @@ body {
     color: var(--bg-primary);
     padding: 12px 24px;
     border-radius: 100px;
-    font-weight: 600;
+    font-weight: 700;
     opacity: 0;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 100;
+    z-index: 1000;
 }
 
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
+.fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 @media (max-width: 650px) {
-    .header { flex-direction: column; gap: 20px; text-align: center; }
     .comparison-grid { grid-template-columns: 1fr; }
+    .header { padding: 20px 0; }
     .btn-install-main span { display: none; }
     .btn-install-main { width: 44px; height: 44px; padding: 0; justify-content: center; border-radius: 50%; }
-    .btn-share span { display: none; }
     .controls-wrapper { flex-direction: column; gap: 20px; }
+    .nav-buttons { width: 100%; }
+    .btn-primary, .btn-secondary { flex: 1; justify-content: center; }
 }
