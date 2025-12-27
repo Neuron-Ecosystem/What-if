@@ -21,25 +21,24 @@
 <body>
     <div class="app-background"></div>
     <div class="container">
-      <header class="header">
-    <div class="logo-group">
-        <div class="logo-container">
-            <div class="logo-icon">🌌</div>
-            <div class="logo-text">
-                <h1>What If</h1>
-            </div>
+    <header class="header">
+    <div class="logo-container">
+        <div class="logo-text">
+            <h1>What If</h1>
+            <p class="tagline">Лаборатория реальности</p>
         </div>
-        <button id="installAppBtn" class="btn-install-mini" onclick="installApp()">
-            <i class="fas fa-download"></i>
-            <span>Установить</span>
-        </button>
     </div>
     
     <div class="header-actions">
+        <button id="installAppBtn" class="btn-install-main" style="display: none;" onclick="installApp()">
+            <i class="fas fa-download"></i>
+            <span>Установить</span>
+        </button>
+
         <button id="dailyScenarioBtn" class="btn-icon" title="Сценарий дня">
             <i class="far fa-star"></i>
         </button>
-        <button id="themeToggle" class="btn-icon">
+        <button id="themeToggle" class="btn-icon" aria-label="Сменить тему">
             <i class="fas fa-moon"></i>
         </button>
     </div>
