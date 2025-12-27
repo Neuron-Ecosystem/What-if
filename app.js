@@ -1,4 +1,4 @@
-// --- PWA & APP LOGIC ---
+// --- PWA LOGIC ---
 let deferredPrompt;
 
 if ('serviceWorker' in navigator) {
@@ -22,7 +22,7 @@ async function installApp() {
     deferredPrompt = null;
 }
 
-const CONFIG = { scenariosFile: 'scenarios.json', defaultTheme: 'dark', appStateKey: 'whatIf_v2_state', dayMs: 86400000 };
+const CONFIG = { scenariosFile: 'scenarios.json', defaultTheme: 'dark', dayMs: 86400000 };
 const AppState = { scenarios: [], filteredScenarios: [], currentIndex: 0, currentCategory: 'all', theme: CONFIG.defaultTheme, dailyScenarioId: null };
 
 const DOM = {
@@ -34,9 +34,7 @@ const DOM = {
     themeToggle: document.getElementById('themeToggle'),
     categoryPills: document.querySelectorAll('.category-pill'),
     metaCategory: document.getElementById('scenarioCategory'),
-    metaTime: document.getElementById('readingTime'),
-    toast: document.getElementById('toast'),
-    installBtn: document.getElementById('installAppBtn')
+    toast: document.getElementById('toast')
 };
 
 async function initApp() {
@@ -84,9 +82,8 @@ function renderCurrentScenario() {
     if (!s) return;
 
     if (DOM.metaCategory) DOM.metaCategory.textContent = getCategoryName(s.category);
-    
     const isDaily = s.id === AppState.dailyScenarioId;
-    const dailyBadge = isDaily ? `<div style="color: var(--accent-primary); font-size: 0.9rem; margin-bottom: 12px; font-weight: 700; letter-spacing: 1px;"><i class="fas fa-star"></i> ВЫБОР ВСЕЛЕННОЙ НА СЕГОДНЯ</div>` : '';
+    const dailyBadge = isDaily ? `<div style="color: var(--accent-primary); font-size: 0.9rem; margin-bottom: 12px; font-weight: 700;"><i class="fas fa-star"></i> ВЫБОР ВСЕЛЕННОЙ НА СЕГОДНЯ</div>` : '';
 
     DOM.card.innerHTML = `
         <div class="scenario-content fade-in">
@@ -107,8 +104,8 @@ function renderCurrentScenario() {
 
             <div class="deep-dive">
                 <button class="deep-dive-toggle" onclick="toggleDeepDive(this)">
-                    <i class="fas fa- atom"></i>
-                    <span>АНАЛИЗ ПОСЛЕДСТВИЙ</span>
+                    <i class="fas fa-layer-group"></i>
+                    <span>Копнуть глубже: Последствия</span>
                     <i class="fas fa-chevron-down" style="margin-left: auto;"></i>
                 </button>
                 <div class="deep-dive-content">
