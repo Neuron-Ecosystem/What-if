@@ -1,54 +1,45 @@
 :root {
-    /* Основная палитра */
     --bg-primary: #09090b;
     --bg-secondary: #18181b;
-    --bg-glass: rgba(24, 24, 27, 0.7);
     --text-primary: #f4f4f5;
     --text-secondary: #a1a1aa;
-    --text-muted: #52525b;
-    
-    /* Акценты */
     --accent-primary: #8b5cf6; 
     --accent-glow: rgba(139, 92, 246, 0.3);
     --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-    
-    /* Статусы (ВОЗВРАЩЕНО) */
     --success: #10b981;
     --danger: #ef4444;
-    
-    /* UI Элементы */
     --border-color: #27272a;
-    --border-hover: #3f3f46;
-    --radius-sm: 8px;
     --radius-md: 16px;
     --radius-lg: 24px;
-    
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body.light-theme {
     --bg-primary: #f8fafc;
     --bg-secondary: #ffffff;
-    --bg-glass: rgba(255, 255, 255, 0.7);
     --text-primary: #0f172a;
     --text-secondary: #64748b;
     --border-color: #e2e8f0;
-    --border-hover: #cbd5e1;
 }
 
+/* Оболочка для фиксации футера внизу */
 body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     font-family: 'Inter', sans-serif;
-    line-height: 1.6;
     margin: 0;
-    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .container {
     max-width: 800px;
     margin: 0 auto;
     padding: 0 20px;
+    flex: 1; /* Позволяет контенту занимать всё место, выталкивая футер вниз */
+    display: flex;
+    flex-direction: column;
 }
 
 /* --- HEADER --- */
@@ -63,7 +54,6 @@ body {
     font-size: 2.2rem;
     font-weight: 800;
     margin: 0;
-    letter-spacing: -1px;
     background: var(--accent-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -84,11 +74,9 @@ body {
     border: none;
     padding: 10px 20px;
     border-radius: 12px;
-    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
-    box-shadow: 0 4px 15px var(--accent-glow);
 }
 
 .btn-icon {
@@ -102,12 +90,6 @@ body {
     color: var(--text-primary);
     border-radius: 50%;
     cursor: pointer;
-    transition: var(--transition);
-}
-
-.btn-icon:hover {
-    border-color: var(--accent-primary);
-    background: var(--accent-glow);
 }
 
 /* --- КАТЕГОРИИ --- */
@@ -128,7 +110,6 @@ body {
     font-size: 0.9rem;
     cursor: pointer;
     white-space: nowrap;
-    transition: var(--transition);
 }
 
 .category-pill.active {
@@ -136,7 +117,7 @@ body {
     color: white;
 }
 
-/* --- КАРТОЧКА СЦЕНАРИЯ (ГЛАВНОЕ) --- */
+/* --- КАРТОЧКА --- */
 .scenario-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
@@ -148,7 +129,6 @@ body {
 
 .scenario-title {
     font-size: 2.25rem;
-    font-weight: 700;
     margin-bottom: 16px;
     line-height: 1.2;
 }
@@ -159,7 +139,6 @@ body {
     margin-bottom: 40px;
 }
 
-/* СЕТКА СРАВНЕНИЯ */
 .comparison-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -175,7 +154,6 @@ body {
     gap: 10px;
 }
 
-/* Цвета для списков (КАК БЫЛО РАНЬШЕ) */
 .col-changed h3 { color: var(--success); }
 .col-disappeared h3 { color: var(--danger); }
 
@@ -189,31 +167,12 @@ body {
     padding: 12px 0 12px 28px;
     border-bottom: 1px solid var(--border-color);
     font-size: 0.95rem;
-    color: var(--text-primary);
 }
 
-/* Иконки перед пунктами */
-.col-changed li::before {
-    content: "→";
-    position: absolute;
-    left: 0;
-    color: var(--success);
-    font-weight: bold;
-}
-
-.col-disappeared li::before {
-    content: "✕";
-    position: absolute;
-    left: 0;
-    color: var(--danger);
-    font-weight: bold;
-}
+.col-changed li::before { content: "→"; position: absolute; left: 0; color: var(--success); font-weight: bold; }
+.col-disappeared li::before { content: "✕"; position: absolute; left: 0; color: var(--danger); font-weight: bold; }
 
 /* --- DEEP DIVE --- */
-.deep-dive {
-    margin-top: 20px;
-}
-
 .deep-dive-toggle {
     width: 100%;
     display: flex;
@@ -226,7 +185,6 @@ body {
     color: var(--text-primary);
     cursor: pointer;
     font-weight: 600;
-    transition: var(--transition);
 }
 
 .deep-dive-content {
@@ -240,21 +198,38 @@ body {
 
 .deep-dive-content.visible { display: block; }
 
-.consequence-block { margin-bottom: 20px; }
-.consequence-block h4 { 
-    color: var(--accent-primary); 
-    margin-bottom: 8px; 
-    font-size: 0.8rem; 
-    letter-spacing: 1px;
-    text-transform: uppercase; 
+/* --- FOOTER (ЦЕНТРИРОВАНИЕ) --- */
+.footer {
+    padding: 40px 0;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
 }
 
-/* --- КНОПКИ УПРАВЛЕНИЯ --- */
+.footer-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.footer-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.footer-link:hover { color: var(--accent-primary); }
+
+.credit { margin: 0; opacity: 0.7; }
+
+/* --- КНОПКИ НАВИГАЦИИ --- */
 .controls-wrapper {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 40px;
+    margin-bottom: 20px;
 }
 
 .nav-buttons { display: flex; gap: 12px; }
@@ -275,9 +250,6 @@ body {
 .btn-secondary { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
 .btn-share { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-color); }
 
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px var(--accent-glow); }
-
-/* --- TOAST --- */
 .toast {
     position: fixed;
     bottom: 30px;
@@ -289,8 +261,7 @@ body {
     border-radius: 100px;
     font-weight: 700;
     opacity: 0;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 1000;
+    transition: 0.3s;
 }
 
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
@@ -303,10 +274,7 @@ body {
 
 @media (max-width: 650px) {
     .comparison-grid { grid-template-columns: 1fr; }
-    .header { padding: 20px 0; }
     .btn-install-main span { display: none; }
     .btn-install-main { width: 44px; height: 44px; padding: 0; justify-content: center; border-radius: 50%; }
     .controls-wrapper { flex-direction: column; gap: 20px; }
-    .nav-buttons { width: 100%; }
-    .btn-primary, .btn-secondary { flex: 1; justify-content: center; }
 }
