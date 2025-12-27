@@ -1,11 +1,9 @@
-// --- PWA LOGIC ---
+// --- PWA & APP LOGIC ---
 let deferredPrompt;
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('SW active'))
-            .catch(err => console.error('SW error', err));
+        navigator.serviceWorker.register('./sw.js').catch(console.error);
     });
 }
 
@@ -20,32 +18,13 @@ async function installApp() {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-        const installBtn = document.getElementById('installAppBtn');
-        if (installBtn) installBtn.style.display = 'none';
-    }
+    if (outcome === 'accepted') document.getElementById('installAppBtn').style.display = 'none';
     deferredPrompt = null;
 }
 
-// --- CONFIGURATION ---
-const CONFIG = {
-    scenariosFile: 'scenarios.json',
-    defaultTheme: 'dark',
-    appStateKey: 'whatIf_v2_state',
-    dayMs: 86400000
-};
+const CONFIG = { scenariosFile: 'scenarios.json', defaultTheme: 'dark', appStateKey: 'whatIf_v2_state', dayMs: 86400000 };
+const AppState = { scenarios: [], filteredScenarios: [], currentIndex: 0, currentCategory: 'all', theme: CONFIG.defaultTheme, dailyScenarioId: null };
 
-// --- GLOBAL STATE ---
-const AppState = {
-    scenarios: [],
-    filteredScenarios: [],
-    currentIndex: 0,
-    currentCategory: 'all',
-    theme: CONFIG.defaultTheme,
-    dailyScenarioId: null
-};
-
-// --- DOM ELEMENTS ---
 const DOM = {
     card: document.getElementById('scenarioCard'),
     prevBtn: document.getElementById('prevScenarioBtn'),
@@ -60,18 +39,15 @@ const DOM = {
     installBtn: document.getElementById('installAppBtn')
 };
 
-// --- INITIALIZATION ---
 async function initApp() {
     loadTheme();
     setupEventListeners();
-    
     try {
         await loadScenarios();
         calculateDailyScenario();
         handleRouting();
     } catch (error) {
         console.error("Init Error:", error);
-        showErrorState();
     }
 }
 
@@ -83,73 +59,64 @@ async function loadScenarios() {
 
 function filterScenarios(category) {
     AppState.currentCategory = category;
-    AppState.filteredScenarios = category === 'all' 
-        ? [...AppState.scenarios] 
-        : AppState.scenarios.filter(s => s.category === category);
+    AppState.filteredScenarios = category === 'all' ? [...AppState.scenarios] : AppState.scenarios.filter(s => s.category === category);
     AppState.currentIndex = 0;
     updateCategoryUI();
 }
 
 function calculateDailyScenario() {
     const dateCode = Math.floor(Date.now() / CONFIG.dayMs);
-    const index = dateCode % AppState.scenarios.length;
-    AppState.dailyScenarioId = AppState.scenarios[index].id;
+    AppState.dailyScenarioId = AppState.scenarios[dateCode % AppState.scenarios.length].id;
 }
 
 function handleRouting() {
     const hash = window.location.hash;
     if (hash.startsWith('#id=')) {
         const id = parseInt(hash.replace('#id=', ''));
-        const foundIndex = AppState.scenarios.findIndex(s => s.id === id);
-        if (foundIndex !== -1) {
-            filterScenarios('all');
-            AppState.currentIndex = foundIndex;
-        }
+        const idx = AppState.scenarios.findIndex(s => s.id === id);
+        if (idx !== -1) { filterScenarios('all'); AppState.currentIndex = idx; }
     }
     renderCurrentScenario();
-}
-
-function updateHash() {
-    const s = AppState.filteredScenarios[AppState.currentIndex];
-    if (s) history.replaceState(null, null, `#id=${s.id}`);
 }
 
 function renderCurrentScenario() {
     const s = AppState.filteredScenarios[AppState.currentIndex];
     if (!s) return;
 
-    DOM.metaCategory.textContent = getCategoryName(s.category);
+    if (DOM.metaCategory) DOM.metaCategory.textContent = getCategoryName(s.category);
     
     const isDaily = s.id === AppState.dailyScenarioId;
-    const dailyBadge = isDaily ? `<div style="color: var(--accent-primary); font-size: 0.9rem; margin-bottom: 8px; font-weight: 600;"><i class="fas fa-star"></i> ВЫБОР ВСЕЛЕННОЙ</div>` : '';
+    const dailyBadge = isDaily ? `<div style="color: var(--accent-primary); font-size: 0.9rem; margin-bottom: 12px; font-weight: 700; letter-spacing: 1px;"><i class="fas fa-star"></i> ВЫБОР ВСЕЛЕННОЙ НА СЕГОДНЯ</div>` : '';
 
     DOM.card.innerHTML = `
         <div class="scenario-content fade-in">
             ${dailyBadge}
             <h2 class="scenario-title">${s.title}</h2>
             <div class="scenario-intro">${s.intro}</div>
+
             <div class="comparison-grid">
                 <div class="comparison-column col-changed">
-                    <h3><i class="fas fa-plus"></i> Появилось</h3>
+                    <h3><i class="fas fa-plus-circle"></i> ЧТО ПОЯВИЛОСЬ</h3>
                     <ul class="feature-list">${s.changed.map(i => `<li>${i}</li>`).join('')}</ul>
                 </div>
                 <div class="comparison-column col-disappeared">
-                    <h3><i class="fas fa-minus"></i> Исчезло</h3>
+                    <h3><i class="fas fa-minus-circle"></i> ЧТО ИСЧЕЗЛО</h3>
                     <ul class="feature-list">${s.disappeared.map(i => `<li>${i}</li>`).join('')}</ul>
                 </div>
             </div>
+
             <div class="deep-dive">
                 <button class="deep-dive-toggle" onclick="toggleDeepDive(this)">
-                    <i class="fas fa-layer-group"></i>
-                    <span>Последствия и выводы</span>
+                    <i class="fas fa- atom"></i>
+                    <span>АНАЛИЗ ПОСЛЕДСТВИЙ</span>
                     <i class="fas fa-chevron-down" style="margin-left: auto;"></i>
                 </button>
                 <div class="deep-dive-content">
-                    <div class="consequence-block"><h4>🌍 Сеть</h4><p>${s.consequences.internet}</p></div>
-                    <div class="consequence-block"><h4>👥 Общество</h4><p>${s.consequences.people}</p></div>
-                    <div class="consequence-block"><h4>🔧 Технологии</h4><p>${s.consequences.technology}</p></div>
-                    <div class="consequence-block" style="border-top: 1px dashed var(--border-color); padding-top: 15px;">
-                        <h4>🏁 Итог</h4><p><i>${s.conclusion}</i></p>
+                    <div class="consequence-block"><h4>🌍 Цифровая среда</h4><p>${s.consequences.internet}</p></div>
+                    <div class="consequence-block"><h4>👥 Социум</h4><p>${s.consequences.people}</p></div>
+                    <div class="consequence-block"><h4>🔧 Прогресс</h4><p>${s.consequences.technology}</p></div>
+                    <div class="consequence-block" style="border-top: 1px dashed var(--border-color); padding-top: 15px; margin-top: 20px;">
+                        <h4>🏁 Резюме</h4><p><i>${s.conclusion}</i></p>
                     </div>
                 </div>
             </div>
@@ -208,8 +175,9 @@ function setupEventListeners() {
     DOM.categoryPills.forEach(p => p.addEventListener('click', () => { filterScenarios(p.dataset.category); renderCurrentScenario(); updateHash(); }));
 }
 
-function showErrorState() {
-    DOM.card.innerHTML = `<div style="text-align:center; padding: 40px;"><h3>Сбой матрицы</h3><p>Не удалось загрузить данные.</p></div>`;
+function updateHash() {
+    const s = AppState.filteredScenarios[AppState.currentIndex];
+    if (s) history.replaceState(null, null, `#id=${s.id}`);
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
