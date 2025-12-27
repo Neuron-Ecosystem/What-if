@@ -21,31 +21,29 @@
 <body>
     <div class="app-background"></div>
     <div class="container">
-        <header class="header">
-            <div class="logo-group">
-                <div class="logo-container">
-                    <div class="logo-icon">🌌</div>
-                    <div class="logo-text">
-                        <h1>What If</h1>
-                        <p class="tagline">Лаборатория реальности</p>
-                    </div>
-                </div>
-                <button id="installAppBtn" class="btn-install-mini" style="display: none;" onclick="installApp()">
-                    <i class="fas fa-download"></i>
-                    <span>Установить</span>
-                </button>
+      <header class="header">
+    <div class="logo-group">
+        <div class="logo-container">
+            <div class="logo-icon">🌌</div>
+            <div class="logo-text">
+                <h1>What If</h1>
             </div>
-            
-            <div class="header-actions">
-                <button id="dailyScenarioBtn" class="btn-icon" title="Сценарий дня">
-                    <i class="far fa-calendar-star"></i>
-                </button>
-                <button id="themeToggle" class="btn-icon" aria-label="Сменить тему">
-                    <i class="fas fa-moon"></i>
-                </button>
-            </div>
-        </header>
-
+        </div>
+        <button id="installAppBtn" class="btn-install-mini" onclick="installApp()">
+            <i class="fas fa-download"></i>
+            <span>Установить</span>
+        </button>
+    </div>
+    
+    <div class="header-actions">
+        <button id="dailyScenarioBtn" class="btn-icon" title="Сценарий дня">
+            <i class="far fa-star"></i>
+        </button>
+        <button id="themeToggle" class="btn-icon">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+</header>
         <nav class="categories-nav">
             <button class="category-pill active" data-category="all">Все миры</button>
             <button class="category-pill" data-category="tech">Технологии</button>
